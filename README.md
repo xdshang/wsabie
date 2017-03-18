@@ -1,6 +1,8 @@
 # Wsabie
 
-Python implementation of Weston, Jason, Samy Bengio, and Nicolas Usunier. "Wsabie: Scaling up to large vocabulary image annotation." (2011).
+Python implementation of Wsabie.
+
+>Weston, Jason, Samy Bengio, and Nicolas Usunier. "Wsabie: Scaling up to large vocabulary image annotation." IJCAI. Vol. 11. 2011.
 
 #### Data format
 
