@@ -1,42 +1,44 @@
-__author__ = 'Xindi Shang'
-
 from itertools import cycle
 import numpy as np
-from numpy.random import randint
 from scipy import sparse
 import h5py
 from evaluation import load_nuswide, normalize
 
+rng = np.random.RandomState(1701)
 transformer = []
 batch_size = 100
 
-def load(data_file, label_file):
-  '''
-  data: hdf5 file
-  label_file: text file in COOR format for sparse matrix
-  '''
+# def load(data_file, label_file):
+#   '''
+#   data: hdf5 file
+#   label_file: text file in COOR format for sparse matrix
+#   '''
+#   h5f = h5py.File(data_file, 'r')
+#   dset = h5f['/data']
+#   with dset.astype('float32'):
+#     data = dset[:]
 
-	'''
-  h5f = h5py.File(data_file, 'r')
-  dset = h5f['/data']
-  with dset.astype('float32'):
-    data = dset[:]
+#   i = []
+#   j = []
+#   v = []
+#   n = m = 0
+#   with open(label_file, 'r') as fin:
+#     for line in fin:
+#       line = line.split()
+#       n = max(n, int(line[0]))
+#       m = max(m, int(line[1]))
+#       i.append(int(line[0]) - 1)
+#       j.append(int(line[1]) - 1)
+#       v.append(1) # value should be binary
+#   label = sparse.coo_matrix((v, (i, j)), shape = (n, m), 
+#       dtype = np.dtype('b')).tolil()
+#   data = data.toarray()
+#   data = normalize(data, axis = 1)
+#   label = label.tolil()
 
-  i = []
-  j = []
-  v = []
-  n = m = 0
-  with open(label_file, 'r') as fin:
-    for line in fin:
-      line = line.split()
-      n = max(n, int(line[0]))
-      m = max(m, int(line[1]))
-      i.append(int(line[0]) - 1)
-      j.append(int(line[1]) - 1)
-      v.append(1) # value should be binary
-  label = sparse.coo_matrix((v, (i, j)), shape = (n, m), 
-      dtype = np.dtype('b')).tolil()
-  '''
+#   return data, label
+
+def load():
   _, label, _, _, data = load_nuswide('nuswide.npz', 'train')
   data = data.toarray()
   data = normalize(data, axis = 1)
@@ -66,7 +68,7 @@ def train(I, W, data, label, lr = 0.001, maxIter = None):
   it = 0
   loss = 0
 
-  sampleIter = cycle(np.random.permutation(label.shape[0]))
+  sampleIter = cycle(rng.permutation(label.shape[0]))
   universe = set(range(label.shape[1]))
 
   I, W = projection(I, W)
@@ -89,7 +91,7 @@ def train(I, W, data, label, lr = 0.001, maxIter = None):
       margin = -1
       esN = 0
       while margin <= 0 and esN < (vllen - 1):
-        vy = vl[randint(vllen)]
+        vy = vl[rng.randint(vllen)]
         vscore = np.dot(W[vy, :], feat)
         margin = vscore - score + 1
         esN += 1
@@ -115,16 +117,17 @@ def train(I, W, data, label, lr = 0.001, maxIter = None):
       print '\titer: ', it, '\tloss: ', loss / batch_size 
       loss = 0
     # save
-    if it % 46516 == 0:
+    if it % label.shape[0] == 0:
       print 'saving model...'
-      save('models/wsabie_model_it%d' % (it,), I, W)
+      save('models/wsabie_model_iter_%d' % (it,), I, W)
 
   return I, W
 
 if __name__ == '__main__':
-  embed_dim = 500
+  embed_dim = 300
   # load data
-  data, label = load('labels/sbu_decaf_norm_label.h5', 'labels/sbu_label.txt')
+  # data, label = load('labels/sbu_decaf_norm_label.h5', 'labels/sbu_label.txt')
+  data, label = load()
   print 'Data shape: ', data.shape
   print 'Label shape: ', label.shape
   # initialize transformer
@@ -132,9 +135,9 @@ if __name__ == '__main__':
   for i in range(label.shape[1]):
     transformer[i + 1] = transformer[i] + 1. / (i + 1)
   # initialize model
-  I = np.random.rand(data.shape[1], embed_dim).astype(data.dtype)
-  W = np.random.rand(label.shape[1], embed_dim).astype(data.dtype)
+  I = rng.rand(data.shape[1], embed_dim).astype(data.dtype)
+  W = rng.rand(label.shape[1], embed_dim).astype(data.dtype)
   # train loop
-  I, W = train(I, W, data, label, maxIter = data.shape[0])
+  I, W = train(I, W, data, label, maxIter = 2 * data.shape[0])
   # save to hdf5 file
   save('models/wsabie_model', I, W)
