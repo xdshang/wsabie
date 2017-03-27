@@ -12,7 +12,7 @@ def load_nuswide(fname, mode = None):
   concept_name = data['concept_name']
   tag_name = data['tag_name']
   feat = sparse.csc_matrix((data['decaf_data'], data['decaf_indices'], data['decaf_indptr']))
-  print 'nuswide dataset loaded.'
+  print('nuswide dataset loaded.')
   
   if mode == None:
     return gnd, label, idx_tr, concept_name, tag_name, feat
@@ -27,7 +27,7 @@ def load_nuswide(fname, mode = None):
       label = label[idx_te, :]
       feat = feat[idx_te, :]
     else:
-      print 'Unknown mode. train, test or None.'
+      print('Unknown mode. train, test or None.')
     return gnd, label, concept_name, tag_name, feat
 
 def normalize(data, axis = 0):
@@ -68,14 +68,14 @@ if __name__ == '__main__':
   W = h5f['/W'][:]
   h5f.close()
   # predict
-  print 'predicting...'
+  print('predicting...')
   feat = feat.toarray()
   feat = normalize(feat, axis = 1)
   feat = feat.dot(I)
   # feat = normalize(feat, axis = 1)
   # W = normalize(W, axis = 1)
   # evaluate
-  print 'evaluating...'
+  print('evaluating...')
   p5 = []
   p10 = []
   p20 = []
@@ -94,8 +94,7 @@ if __name__ == '__main__':
     if tag[i].sum() > 0:
       ap.append(metrics.average_precision_score(tag[i], score))
     if i % 10000 == 0:
-      print i
-  # auc = []
+      print(i)
   # for i in range(gnd.shape[1]):
   #   tag_id = next((ind for ind, ele in enumerate(tag_name) if ele == concept_name[i]), None)
   #   if tag_id == None:
@@ -104,8 +103,7 @@ if __name__ == '__main__':
   #   score = feat.dot(W[tag_id, :])
   #   ap.append(metrics.average_precision_score(gnd[:, i], score))
   #   auc.append(metrics.roc_auc_score(gnd[:, i], score))
-  print 'P@5:', np.mean(p5)
-  print 'P@10:', np.mean(p10)
-  print 'P@20:', np.mean(p20)
-  print 'mAP:', np.mean(ap)
-  # print 'AUC: ', np.mean(auc)
+  print('P@5: {}'.format(np.mean(p5)))
+  print('P@10: {}'.format(np.mean(p10)))
+  print('P@20: {}'.format(np.mean(p20)))
+  print('mAP: {}'.format(np.mean(ap)))

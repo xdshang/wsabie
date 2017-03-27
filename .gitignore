@@ -1,4 +1,4 @@
 GoogleNews-vectors-negative300.bin
 nuswide.npz
-models/
+models*/
 *.pyc
