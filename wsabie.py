@@ -150,7 +150,7 @@ if __name__ == '__main__':
   else:
     W = initialize_word_embeddings(label_name, embed_dim)
   # train loop
-  I, W = train(I, W, data, label, lr_I = 0.001, lr_W = 0.,
+  I, W = train(I, W, data, label, lr_I = 0.001, lr_W = 0.00001,
       maxIter = 2 * data.shape[0])
   # save to hdf5 file
   save('models/wsabie_model', I, W)
