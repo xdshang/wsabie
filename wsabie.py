@@ -8,36 +8,6 @@ rng = np.random.RandomState(1701)
 transformer = []
 batch_size = 100
 
-# def load(data_file, label_file):
-#   '''
-#   data: hdf5 file
-#   label_file: text file in COOR format for sparse matrix
-#   '''
-#   h5f = h5py.File(data_file, 'r')
-#   dset = h5f['/data']
-#   with dset.astype('float32'):
-#     data = dset[:]
-
-#   i = []
-#   j = []
-#   v = []
-#   n = m = 0
-#   with open(label_file, 'r') as fin:
-#     for line in fin:
-#       line = line.split()
-#       n = max(n, int(line[0]))
-#       m = max(m, int(line[1]))
-#       i.append(int(line[0]) - 1)
-#       j.append(int(line[1]) - 1)
-#       v.append(1) # value should be binary
-#   label = sparse.coo_matrix((v, (i, j)), shape = (n, m), 
-#       dtype = np.dtype('b')).tolil()
-#   data = data.toarray()
-#   data = normalize(data, axis = 1)
-#   label = label.tolil()
-
-#   return data, label
-
 def load():
   _, label, _, label_name, data = load_nuswide('nuswide.npz', 'train')
   data = data.toarray()
@@ -135,7 +105,6 @@ if __name__ == '__main__':
   embed_dim = 300
   random_init_W = True
   # load data
-  # data, label = load('labels/sbu_decaf_norm_label.h5', 'labels/sbu_label.txt')
   data, label, label_name = load()
   print('Data shape: {}'.format(data.shape))
   print('Label shape: {}'.format(label.shape))

@@ -58,10 +58,6 @@ if __name__ == '__main__':
   gnd, tag, concept_name, tag_name, feat = load_nuswide('nuswide.npz', 'test')
   tag = np.array(tag.todense())
   tagid2gndid = build_tagid2gndid(tag_name, concept_name)
-  # with open('labels/sbu_label_name.txt', 'r') as fin:
-  #   tag_name = []
-  #   for line in fin:
-  #     tag_name.append(line.strip())
   # load model
   h5f = h5py.File('models/wsabie_model.h5', 'r')
   I = h5f['/I'][:]
@@ -95,14 +91,6 @@ if __name__ == '__main__':
       ap.append(metrics.average_precision_score(tag[i], score))
     if i % 10000 == 0:
       print(i)
-  # for i in range(gnd.shape[1]):
-  #   tag_id = next((ind for ind, ele in enumerate(tag_name) if ele == concept_name[i]), None)
-  #   if tag_id == None:
-  #     print 'Concept name: ', concept_name, ' cannot be found in tag'
-  #     continue
-  #   score = feat.dot(W[tag_id, :])
-  #   ap.append(metrics.average_precision_score(gnd[:, i], score))
-  #   auc.append(metrics.roc_auc_score(gnd[:, i], score))
   print('P@5: {}'.format(np.mean(p5)))
   print('P@10: {}'.format(np.mean(p10)))
   print('P@20: {}'.format(np.mean(p20)))
