@@ -13,8 +13,8 @@ The preprocessed groundtruth, tags and other meta data of NUS-WIDE dataset is in
 
 You should add your own image features, and load them in `evaluation.py`, like:
 
-`feat = data['decaf_feat']`,
+`feat = np.load(feat_file_name)`,
 
 if your features are sparse, then
 
-`feat = sparse.csc_matrix((data['decaf_data'], data['decaf_indices'], data['decaf_indptr']))`.
+`feat = sparse.csc_matrix((feat['data'], feat['indices'], feat['indptr']))`.
