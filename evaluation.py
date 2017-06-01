@@ -2,45 +2,50 @@ import numpy as np
 from scipy import sparse
 import h5py
 from sklearn import metrics
+import argparse
 
-def load_nuswide(fname, mode = None):
-  data = np.load(fname)
-
-  gnd = data['gnd']
-  label = sparse.csc_matrix((data['label_data'], data['label_indices'], data['label_indptr']))
-  idx_tr = data['idx_tr']
-  concept_name = data['concept_name']
-  tag_name = data['tag_name']
-  feat = sparse.csc_matrix((data['decaf_data'], data['decaf_indices'], data['decaf_indptr']))
-  print('nuswide dataset loaded.')
+def load_nuswide(feat_fname, mode = None):
+  meta = np.load('nuswide-meta.npz')
+  gnd = meta['gnd']
+  tag = sparse.csc_matrix((meta['tag_data'], meta['tag_indices'], meta['tag_indptr']))
+  idx_tr = meta['is_train']
+  gnd_name = meta['gnd_name']
+  tag_name = meta['tag_name']
+  img_name = meta['img_name']
+  print('nuswide metadata loaded.')
+  feat = np.load(feat_fname)
+  feat = sparse.csc_matrix((feat['data'], feat['indices'], feat['indptr']))
+  print('nuswide features loaded.')
   
   if mode == None:
-    return gnd, label, idx_tr, concept_name, tag_name, feat
+    return gnd, tag, idx_tr, gnd_name, tag_name, img_name, feat
   else:
     if mode == 'train':
       gnd = gnd[idx_tr, :]
-      label = label[idx_tr, :]
+      tag = tag[idx_tr, :]
+      img_name = img_name[idx_tr]
       feat = feat[idx_tr, :]
     elif mode == 'test':
       idx_te = np.logical_not(idx_tr)
       gnd = gnd[idx_te, :]
-      label = label[idx_te, :]
+      tag = tag[idx_te, :]
+      img_name = img_name[idx_te]
       feat = feat[idx_te, :]
     else:
       print('Unknown mode. train, test or None.')
-    return gnd, label, concept_name, tag_name, feat
+    return gnd, tag, gnd_name, tag_name, img_name, feat
 
-def normalize(data, axis = 0):
-  nrm = np.linalg.norm(data, axis = axis)
+def normalize(X, axis = 0):
+  nrm = np.linalg.norm(X, axis = axis)
   nrm = 1. / nrm
-  return data * np.expand_dims(nrm, axis = axis)
+  return X * np.expand_dims(nrm, axis = axis)
 
-def build_tagid2gndid(tag_name, concept_name):
+def build_tagid2gndid(tag_name, gnd_name):
   tagid2gndid = dict()
-  concept_name = list(concept_name)
+  gnd_name = list(gnd_name)
   for i, tag in enumerate(tag_name):
     try:
-      gndid = concept_name.index(tag)
+      gndid = gnd_name.index(tag)
       tagid2gndid[i] = gndid
     except ValueError:
       pass
@@ -54,12 +59,17 @@ def set_pred(pred, indices, tagid2gndid):
       pass
 
 if __name__ == '__main__':
-  # load dataset
-  gnd, tag, concept_name, tag_name, feat = load_nuswide('nuswide.npz', 'test')
-  tag = np.array(tag.todense())
-  tagid2gndid = build_tagid2gndid(tag_name, concept_name)
+  parser = argparse.ArgumentParser(description = 'Evaluate a given model.')
+  parser.add_argument('model_fname', type = str,
+                      help = 'File path of the model.')
+  args = parser.parse_args()
+  # load metaset
+  gnd, tag, gnd_name, tag_name, img_name, feat = load_nuswide('nuswide-decaf.npz', 'test')
+  tag = tag.toarray()
+  tagid2gndid = build_tagid2gndid(tag_name, gnd_name)
   # load model
-  h5f = h5py.File('models/wsabie_model.h5', 'r')
+  print('loading model {}...'.format(args.model_fname))
+  h5f = h5py.File(args.model_fname, 'r')
   I = h5f['/I'][:]
   W = h5f['/W'][:]
   h5f.close()
@@ -68,8 +78,6 @@ if __name__ == '__main__':
   feat = feat.toarray()
   feat = normalize(feat, axis = 1)
   feat = feat.dot(I)
-  # feat = normalize(feat, axis = 1)
-  # W = normalize(W, axis = 1)
   # evaluate
   print('evaluating...')
   p5 = []
@@ -80,7 +88,7 @@ if __name__ == '__main__':
     score = W.dot(feat[i])
     # score = np.random.rand(tag_name.shape[0])
     rank_list = np.argsort(score)
-    pred = np.zeros((concept_name.shape[0],), dtype = np.int)
+    pred = np.zeros((gnd_name.shape[0],), dtype = np.int)
     set_pred(pred, rank_list[-5:], tagid2gndid)
     p5.append(metrics.precision_score(gnd[i], pred))
     set_pred(pred, rank_list[-10:], tagid2gndid)
@@ -95,3 +103,6 @@ if __name__ == '__main__':
   print('P@10: {}'.format(np.mean(p10)))
   print('P@20: {}'.format(np.mean(p20)))
   print('mAP: {}'.format(np.mean(ap)))
+  with open('precision10.txt', 'w') as fout:
+    for i, x in enumerate(p10):
+      fout.write('{} : {}\n'.format(img_name[i], x))

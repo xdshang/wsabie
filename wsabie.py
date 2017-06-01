@@ -9,7 +9,7 @@ transformer = []
 batch_size = 100
 
 def load():
-  _, label, _, label_name, data = load_nuswide('nuswide.npz', 'train')
+  _, label, _, label_name, _, data = load_nuswide('nuswide-decaf.npz', 'train')
   data = data.toarray()
   data = normalize(data, axis = 1)
   label = label.tolil()
