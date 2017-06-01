@@ -6,7 +6,7 @@ Python implementation of Wsabie.
 
 #### Data format
 
-Groundtruth, tags and meta data of NUS-WIDE dataset is in `nuswide_meta.npz`.
+The preprocessed groundtruth, tags and other meta data of NUS-WIDE dataset is in `nuswide_meta.npz` (please refer to `evaluation.py` for the example of usage). Using the dataset, please cite:
 
 >Chua, Tat-Seng, et al. "NUS-WIDE: a real-world web image database from National University of Singapore." Proceedings of the ACM international conference on image and video retrieval. ACM, 2009.
 
